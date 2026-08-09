@@ -14,3 +14,16 @@ export const extractText = asyncHandler(async (req: Request, res: Response) => {
     result,
   });
 });
+
+export const extractTextFromUrl = asyncHandler(
+  async (req: Request, res: Response) => {
+    if (!req.body.url) {
+      throw new AppError("URL is required", 400);
+    }
+    const result = await extractionService.extractTextFromUrl(req.body.url);
+    res.status(200).json({
+      success: true,
+      result,
+    });
+  },
+);
