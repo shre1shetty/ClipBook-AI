@@ -1,0 +1,35 @@
+{
+  "name": "extractionservice",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "tsx watch src/server.ts"
+  },
+  "type": "module",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@paddleocr/api-sdk": "^0.2.3",
+    "axios": "^1.19.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.6.2",
+    "form-data": "^4.0.6",
+    "helmet": "^8.3.0",
+    "multer": "^2.2.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/form-data": "^2.2.1",
+    "@types/multer": "^2.2.0",
+    "@types/node": "^26.2.0",
+    "ts-node-dev": "^2.0.0",
+    "tsx": "^4.23.11",
+    "typescript": "^7.0.2"
+  }
+}
