@@ -31,7 +31,7 @@ app.get("/", (req, res) => {
   res.send("API is running...");
 });
 
-app.use("/image", extractionRouter);
+app.use("/extraction", extractionRouter);
 
 app.use(errorHandler);
 

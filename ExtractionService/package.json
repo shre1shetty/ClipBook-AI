@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "dev": "tsx watch src/server.ts"
   },
   "type": "module",
@@ -28,15 +28,23 @@
     "turndown": "^7.2.4"
   },
   "devDependencies": {
+    "@jest/globals": "^30.4.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/form-data": "^2.2.1",
+    "@types/jest": "^30.0.0",
     "@types/jsdom": "^30.0.0",
     "@types/multer": "^2.2.0",
+    "@types/nock": "^10.0.3",
     "@types/node": "^26.2.0",
+    "@types/supertest": "^7.2.1",
     "@types/turndown": "^5.0.6",
+    "jest": "^30.4.2",
+    "nock": "^14.0.17",
+    "supertest": "^7.2.2",
+    "ts-jest": "^29.4.12",
     "ts-node-dev": "^2.0.0",
     "tsx": "^4.23.11",
-    "typescript": "^7.0.2"
+    "typescript": "npm:@typescript/typescript6@^6.0.2"
   }
 }

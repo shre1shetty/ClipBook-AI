@@ -6,6 +6,6 @@ import {
 } from "../controllers/extraction.controller.js";
 
 const router: Router = Router();
-router.post("/extract", upload.single("image"), extractText);
-router.post("/extractFromUrl", extractTextFromUrl);
+router.post("/image", upload.single("image"), extractText);
+router.post("/url", extractTextFromUrl);
 export const extractionRouter: Router = router;
