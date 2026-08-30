@@ -1,7 +1,11 @@
+import logging
 import re
 import uuid
 from app.chunking.base import Chunker
-from app.models.document import DocumentRequest,Chunk
+from app.models.document import DocumentRequest
+from app.models.chunk import Chunk
+
+logger = logging.getLogger(__name__)
 
 class DocumentChunker(Chunker):
     def __init__(self,chunk_size:int=1000,chunk_overlap:int=150): #constructor
@@ -17,6 +21,11 @@ class DocumentChunker(Chunker):
         
         for section in sections:
             content=section["content"]
+            logger.debug(
+                "Processing section heading_path=%s content_length=%s",
+                section["heading_path"],
+                len(content),
+            )
             
             # If chunk is already small enough.
             if len(content) <= self.chunk_size:
@@ -25,6 +34,11 @@ class DocumentChunker(Chunker):
             # If chunk is greater than size split recursively
             else:
                 split_contents = self._recursive_split(content)
+                logger.debug(
+                    "Section %s split into %s chunk(s)",
+                    section["heading_path"],
+                    len(split_contents),
+                )
             
             for content_part in split_contents:
                 chunks.append(
@@ -44,6 +58,11 @@ class DocumentChunker(Chunker):
                     )
                 )
     
+        logger.info(
+            "Document %s chunking complete: %s chunk(s) created",
+            document.document_id,
+            len(chunks),
+        )
         return chunks
     
     def _extract_sections(self,content:str)->list[dict]:
@@ -78,6 +97,7 @@ class DocumentChunker(Chunker):
                 # Remove headings at the same/deeper level
                 heading_path=heading_path[:level-1]
                 heading_path.append(heading)
+                logger.debug("Detected heading at level %s: %s", level, heading)
             else:
                 current_content.append(line)
         
@@ -91,6 +111,7 @@ class DocumentChunker(Chunker):
                         "heading_path":heading_path.copy()
                     }
                 )
+        logger.debug("Extracted %s section(s) from markdown content", len(sections))
         return sections
     def _recursive_split(self,text:str)->list[str]:
         seperators=[
@@ -99,6 +120,7 @@ class DocumentChunker(Chunker):
             ". ",
             " "
         ]
+        logger.debug("Recursively splitting text of length %s using separators %s", len(text), seperators)
         
         return self._split_recursive(text=text.strip(),seperators=seperators)
     
@@ -110,6 +132,7 @@ class DocumentChunker(Chunker):
         # Recursively call _split_recursive till chunk is less than equal to chunk_size
         
         if not seperators:
+            logger.debug("No suitable separator left for text length %s; falling back to hard split", len(text))
             return self._hard_split(text)
         
         seperator=seperators[0]
@@ -118,6 +141,7 @@ class DocumentChunker(Chunker):
         
         #If seperator doesnt split anything try next seperator
         if len(parts)==1:
+            logger.debug("Separator '%s' did not split text; trying next separator", seperator)
             return self._split_recursive(text,seperators[1:]) # return every element of list except 1st
 
         chunks:list[str]=[]
@@ -151,7 +175,8 @@ class DocumentChunker(Chunker):
         
         if current.strip():
             chunks.append(current.strip())
-            
+
+        logger.debug("Recursive split produced %s chunk(s) before overlap handling", len(chunks))
         return self._apply_overlap(chunks)
         
     def _hard_split(self,text:str)->list[str]:
@@ -159,7 +184,7 @@ class DocumentChunker(Chunker):
         chunks:list[str]=[]
         start=0
         
-        while start < len[text]:
+        while start < len(text):
             end=min(
                 start+self.chunk_size,
                 len(text)
@@ -174,25 +199,37 @@ class DocumentChunker(Chunker):
                 break
                 
             start=end
+        logger.debug("Hard split produced %s chunk(s) for text length %s", len(chunks), len(text))
         return self._apply_overlap(chunks)
             
-    def _apply_overlap(self,chunks:list[str])->list[str]:
-        # Add overlap between adjacent chunks 
-        
+    def _apply_overlap(self, chunks: list[str]) -> list[str]:
         if len(chunks) <= 1:
             return chunks
-        
-        overlapped:list[str]=[chunks[0]]
-        
-        for i in range(1,len(chunks)):
-            previous=chunks[i-1]
-            
-            overlap=previous[-self.chunk_size:]
-            
-            current=chunks[i]
-            
-            overlapped.append(
-                f"{overlap} {chunks}".strip()
+    
+        overlapped: list[str] = [chunks[0]]
+    
+        for i in range(1, len(chunks)):
+            previous = chunks[i - 1]
+            current = chunks[i]
+    
+            available_space = self.chunk_size - len(current)
+    
+            if available_space <= 0:
+                overlapped.append(current)
+                continue
+    
+            overlap_size = min(
+                self.chunk_overlap,
+                available_space,
+                len(previous)
             )
+    
+            overlap = previous[-overlap_size:]
+    
+            overlapped.append(
+                f"{overlap} {current}".strip()
+            )
+    
+        logger.debug("Applied overlap to %s chunk(s); final chunk count=%s", len(chunks), len(overlapped))
         return overlapped
         
