@@ -3,13 +3,15 @@ from app.embeddings.bge import BGEEmbeddingService
 from app.models.document import DocumentRequest
 from app.services.ingestion_service import IngestionService
 from app.vector_store.qdrant import QdrantVectorRepository
-
-
+from app.services.retrieval_service import RetrievalService
+from app.query.simple_optimizer import SimpleQueryOptimizer 
+from app.models.query import QueryRequest
 def test_vector_search():
 
+    notebook_id = "notebook-1"
     document = DocumentRequest(
         document_id="doc-1",
-        notebook_id="notebook-1",
+        notebook_id=notebook_id,
         title="React Notes",
         content="""
 # React
@@ -49,13 +51,21 @@ State allows components to store information that can change over time.
 
     query = "What are reusable pieces of UI in React?"
 
-    query_embedding = embedding_service.embed([query])[0]
-
-    results = repository.search(
-        query_embedding=query_embedding,
-        notebook_id="notebook-1",
-        top_k=3,
+    request = QueryRequest(
+        query=query,
+        notebook_id=notebook_id,
+        top_k=3
     )
+    
+    query_optimizer=SimpleQueryOptimizer()
+    
+    retrieval_service= RetrievalService(
+        query_optimizer=query_optimizer,
+        vector_repository=repository,
+        embedding_service=embedding_service
+    )
+
+    results= retrieval_service.retrieve(request)
 
     assert len(results) > 0
     assert len(results) <= 3
