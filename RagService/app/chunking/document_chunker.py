@@ -218,13 +218,13 @@ class DocumentChunker(Chunker):
                 overlapped.append(current)
                 continue
     
-            overlap_size = min(
+            overlap_limit = min(
                 self.chunk_overlap,
                 available_space,
                 len(previous)
             )
     
-            overlap = previous[-overlap_size:]
+            overlap = self._get_overlap(previous, overlap_limit)
     
             overlapped.append(
                 f"{overlap} {current}".strip()
@@ -232,4 +232,47 @@ class DocumentChunker(Chunker):
     
         logger.debug("Applied overlap to %s chunk(s); final chunk count=%s", len(chunks), len(overlapped))
         return overlapped
-        
+
+    def _get_overlap(self, text: str, max_size: int) -> str:
+        """
+        Get meaningful overlap from the end of the previous chunk.
+
+        Preference:
+        1. Complete sentences that fit within max_size.
+        2. If no complete sentence fits, use up to max_size
+        characters ending at a word boundary.
+        """
+
+        if not text or max_size <= 0:
+            return ""
+
+        # Take the tail we're allowed to use.
+        candidate = text[-max_size:]
+
+        # Look for complete sentences inside the candidate.
+        sentences = re.findall(
+            r'[^.!?]*[.!?]',
+            candidate,
+            flags=re.DOTALL
+        )
+
+        if sentences:
+            overlap = "".join(sentences).strip()
+
+            # Make sure we're not accidentally exceeding the limit.
+            if len(overlap) <= max_size:
+                return overlap
+
+        # No complete sentence fits.
+        # Use the last max_size characters, but don't start
+        # in the middle of a word.
+        if len(candidate) == len(text):
+            return candidate.strip()
+
+        # candidate may start halfway through a word.
+        first_space = candidate.find(" ")
+
+        if first_space != -1:
+            candidate = candidate[first_space + 1:]
+
+        return candidate.strip()

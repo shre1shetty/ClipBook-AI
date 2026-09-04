@@ -1,5 +1,6 @@
 from abc import ABC,abstractmethod
 from app.models.embedded_chunk import EmbeddedChunk
+from app.models.retrieved_chunk import RetrievedChunk
 class VectorRepository(ABC):
     
     @abstractmethod
@@ -15,7 +16,7 @@ class VectorRepository(ABC):
         query_embedding:list[float],
         notebook_id:str,
         top_k:int=5
-    )->list[EmbeddedChunk]:
+    )->list[RetrievedChunk]:
         pass
     
     @abstractmethod

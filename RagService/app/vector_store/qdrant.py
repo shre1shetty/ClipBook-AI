@@ -2,11 +2,15 @@ from qdrant_client import QdrantClient
 from qdrant_client.models import (
     Distance,
     PointStruct,
-    VectorParams
+    VectorParams,
+    Filter,
+    FieldCondition,
+    MatchValue
 )
 from app.models.embedded_chunk import EmbeddedChunk
 from app.vector_store.base import VectorRepository
-
+from app.models.retrieved_chunk import RetrievedChunk
+from app.models.chunk import Chunk
 class QdrantVectorRepository(VectorRepository):
     
     def __init__(
@@ -71,4 +75,59 @@ class QdrantVectorRepository(VectorRepository):
         self.client.upsert(
             collection_name=self.collection_name,
             points=points,
+        )
+    
+    def search(self, query_embedding:list[float],notebook_id:str,top_k:int)->list[RetrievedChunk]:
+        results = self.client.query_points(
+            collection_name=self.collection_name,
+            query=query_embedding,
+            query_filter=Filter(
+                must=[
+                    FieldCondition(
+                        key="notebook_id",
+                        match=MatchValue(value=notebook_id)
+                    )
+                ]
+            ),
+            limit=top_k,
+            with_payload=True
+        )
+        
+        retrieved_chunks=[]
+        
+        for point in results.points:
+            payload=point.payload
+            
+            chunk=Chunk(
+                id=str(point.id),
+                document_id=payload.get("document_id"),
+                notebook_id=payload.get("notebook_id"),
+                content=payload.get("content"),
+                chunk_index=payload.get("chunk_index"),
+                section=payload.get("section"),
+                page_number=payload.get("page_number"),
+                heading_path=payload.get("heading_path", []),
+                metadata=payload.get("metadata", {}),
+            )
+            
+            retrieved_chunks.append(
+                RetrievedChunk(
+                    chunk=chunk,
+                    similarity_score=point.score
+                )
+            )
+            
+        return retrieved_chunks
+    
+    def delete_document(self, document_id:str) -> None:
+        self.client.delete(
+            collection_name=self.collection_name,
+            points_selector=Filter(
+                must=[
+                    FieldCondition(
+                        key="document_id",
+                        match=MatchValue(value=document_id)
+                    )
+                ]
+            )
         )
