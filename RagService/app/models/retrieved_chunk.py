@@ -4,3 +4,4 @@ from app.models.chunk import Chunk
 class RetrievedChunk(BaseModel):
     chunk:Chunk
     similarity_score:float
+    rerank_score: float | None = None

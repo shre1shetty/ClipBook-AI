@@ -6,6 +6,8 @@ from app.vector_store.qdrant import QdrantVectorRepository
 from app.services.retrieval_service import RetrievalService
 from app.query.simple_optimizer import SimpleQueryOptimizer 
 from app.models.query import QueryRequest
+from app.reranking.cross_encoder import CrossEncoderReRanker
+
 def test_vector_search():
 
     notebook_id = "notebook-1"
@@ -59,10 +61,13 @@ State allows components to store information that can change over time.
     
     query_optimizer=SimpleQueryOptimizer()
     
+    reranker=CrossEncoderReRanker()
+    
     retrieval_service= RetrievalService(
         query_optimizer=query_optimizer,
         vector_repository=repository,
-        embedding_service=embedding_service
+        embedding_service=embedding_service,
+        reranker=reranker
     )
 
     results= retrieval_service.retrieve(request)
@@ -73,6 +78,7 @@ State allows components to store information that can change over time.
     for result in results:
         print(
             f"\nScore: {result.similarity_score:.4f}"
+            f"\nRerank Score: {result.rerank_score:.4f}"
             f"\nSection: {result.chunk.section}"
             f"\nContent: {result.chunk.content}"
         )
