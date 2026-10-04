@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
 
-class LLMService(ABC):
+class PromptBuilder(ABC):
     @abstractmethod
-    def generate(
+    def build_prompt(
         self,
-        prompt: str,
+        query: str,
+        context: str
     ) -> str:
         pass

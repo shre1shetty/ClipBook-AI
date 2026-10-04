@@ -52,3 +52,42 @@ State allows components to remember information.
         "React",
         "State",
     ]
+
+
+def test_recursive_splitting_applies_overlap_once_and_respects_chunk_size():
+    content = " ".join(f"word{index}" for index in range(80))
+    chunker = DocumentChunker(chunk_size=40, chunk_overlap=10)
+    apply_overlap_calls = 0
+    original_apply_overlap = chunker._apply_overlap
+
+    def track_apply_overlap(chunks):
+        nonlocal apply_overlap_calls
+        apply_overlap_calls += 1
+        return original_apply_overlap(chunks)
+
+    chunker._apply_overlap = track_apply_overlap
+
+    chunks = chunker._recursive_split(content)
+
+    assert apply_overlap_calls == 1
+    assert len(chunks) > 1
+    assert all(len(chunk) <= chunker.chunk_size for chunk in chunks)
+
+
+def test_overlap_starts_at_a_word_boundary():
+    chunker = DocumentChunker(chunk_size=40, chunk_overlap=10)
+
+    overlap = chunker._get_overlap("alpha bravo charlie delta", 10)
+
+    assert overlap == "delta"
+
+
+def test_recursive_split_preserves_delimiters_at_chunk_boundaries():
+    chunker = DocumentChunker(chunk_size=24, chunk_overlap=0)
+
+    chunks = chunker._split_recursive(
+        "First sentence. Second sentence.",
+        [". "],
+    )
+
+    assert chunks == ["First sentence.", "Second sentence."]

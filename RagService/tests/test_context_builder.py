@@ -34,15 +34,15 @@ def test_context_builder():
         ),
     ]
 
-    builder = SimpleContextBuilder()
+    builder = SimpleContextBuilder(max_characters=5000)
 
     context = builder.build(chunks)
 
-    print(f"\n{context}")
+    print(f"\n{context.text}")
 
-    assert "Section: Components" in context
-    assert "Heading Path: React > Components" in context
-    assert "Components are reusable pieces of UI in React." in context
-    assert "Section: State" in context
-    assert "Heading Path: React > State" in context
-    assert "State allows components to remember information between renders." in context
+    assert "[Section: Components]" in context.text
+    assert "[Heading Path: React > Components]" in context.text
+    assert "Components are reusable pieces of UI in React." in context.text
+    assert "[Section: State]" in context.text
+    assert "[Heading Path: React > State]" in context.text
+    assert "State allows components to remember information between renders." in context.text

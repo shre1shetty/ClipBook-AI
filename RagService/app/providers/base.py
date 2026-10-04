@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-class LLMService(ABC):
+class LLMProvider(ABC):
     @abstractmethod
     def generate(
         self,

@@ -13,7 +13,18 @@ class IngestionService:
         
         chunks=self.chunker.chunk(document)
         
-        texts=[chunk.content for chunk in chunks]
+        texts=[]
+        
+        for chunk in chunks:
+            passage_parts=[]
+            if chunk.section:
+                passage_parts.append(f"Section: {chunk.section}")
+            if chunk.heading_path:
+                heading_path = " > ".join(chunk.heading_path)
+                passage_parts.append(f"Heading path: {heading_path}")
+            
+                passage_parts.append(f"Content: {chunk.content}")
+            texts.append("\n".join(passage_parts))
         
         embeddings=self.embedding_service.embed(texts) #batching the embeddings to not call embedding recursively
         
