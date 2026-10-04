@@ -4,18 +4,18 @@ from app.providers.base import LLMProvider
 from app.models.query import QueryRequest
 from app.models.rag_response import RAGSource,RAGResponse
 from app.prompt.base import PromptBuilder
-from app.generation.generation_service import GenerationService
+from app.generation.generation_service import LLMService
 class RagService:
     def __init__(
         self,
         retrieval_service: RetrievalService,
         context_builder: ContextBuilder,
-        llm_provider: LLMProvider,
+        llm_service: LLMService,
         prompt_builder: PromptBuilder
     ):
         self.retrieval_service = retrieval_service
         self.context_builder = context_builder
-        self.llm_provider = llm_provider
+        self.llm_service = llm_service
         self.prompt_builder = prompt_builder
         
     def answer(self, request:QueryRequest)-> RAGResponse:
@@ -34,9 +34,8 @@ class RagService:
         #         f"\nRerank score: {chunk.rerank_score:.4f}"
         #     )
         prompt= self.prompt_builder.build_prompt(query=request.query,context=built_context.text)
-        generation_service = GenerationService(provider=self.llm_provider)
         print(f"\nGenerated prompt:\n{prompt}")
-        answer = generation_service.generate(prompt=prompt)
+        answer = self.llm_service.generate(prompt=prompt)
         sources=[
                 RAGSource(
                     document_id=result.chunk.document_id,

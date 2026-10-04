@@ -2,12 +2,19 @@ from app.chunking.base import Chunker
 from app.embeddings.base import EmbeddingService
 from app.models.document import DocumentRequest
 from app.models.embedded_chunk import EmbeddedChunk
+from app.vector_store.base import VectorRepository
 
 class IngestionService:
     
-    def __init__(self,chunker:Chunker,embedding_service:EmbeddingService):
+    def __init__(
+        self,
+        chunker: Chunker,
+        embedding_service: EmbeddingService,
+        vector_repository: VectorRepository
+        ):
         self.chunker=chunker
         self.embedding_service=embedding_service
+        self.vector_repository=vector_repository
     
     def process(self,document:DocumentRequest)->list[EmbeddedChunk]:
         
@@ -23,12 +30,11 @@ class IngestionService:
                 heading_path = " > ".join(chunk.heading_path)
                 passage_parts.append(f"Heading path: {heading_path}")
             
-                passage_parts.append(f"Content: {chunk.content}")
+            passage_parts.append(f"Content: {chunk.content}")
             texts.append("\n".join(passage_parts))
         
         embeddings=self.embedding_service.embed(texts) #batching the embeddings to not call embedding recursively
-        
-        return [
+        embedded_chunks = [
             EmbeddedChunk(
                 chunk=chunk,
                 embedding=embedding
@@ -37,3 +43,5 @@ class IngestionService:
             in 
             zip(chunks,embeddings)
         ]
+        self.vector_repository.upsert(embedded_chunks)
+        return embedded_chunks

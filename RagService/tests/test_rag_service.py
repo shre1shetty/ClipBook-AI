@@ -11,6 +11,7 @@ from app.services.retrieval_service import RetrievalService
 from app.vector_store.qdrant import QdrantVectorRepository
 from app.prompt.simple_prompt_builder import SimplePromptBuilder
 from app.generation.factory import LLMProviderFactory
+from app.generation.generation_service import GenerationService
 from app.verification.simple_verifier import SimpleRetrieverVerifier
 from dotenv import load_dotenv
 
@@ -34,10 +35,15 @@ def test_rag_service():
     )
 
     embedding_service = BGEEmbeddingService()
+    
+    repository=QdrantVectorRepository(
+        collection_name="test_rag_chunks",
+    )
 
     ingestion_service = IngestionService(
         chunker=chunker,
         embedding_service=embedding_service,
+        vector_repository=repository
     )
 
     embedded_chunks = ingestion_service.process(document)
@@ -49,11 +55,6 @@ def test_rag_service():
             f"\nContent length: {len(chunk.chunk.content)}"
             f"\nHeading: {' > '.join(chunk.chunk.heading_path)}"
         )
-    repository = QdrantVectorRepository(
-        collection_name="test_rag_chunks",
-    )
-
-    repository.upsert(embedded_chunks)
 
     retrieval_service = RetrievalService(
         query_optimizer=SimpleQueryOptimizer(),
@@ -64,11 +65,12 @@ def test_rag_service():
     )
 
     provider = LLMProviderFactory.create()
+    generation_service = GenerationService(provider=provider)
     
     rag_service = RagService(
         retrieval_service=retrieval_service,
         context_builder=SimpleContextBuilder(),
-        llm_provider=provider,
+        llm_service=generation_service,
         prompt_builder=SimplePromptBuilder(),
     )
 
