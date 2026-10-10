@@ -5,7 +5,6 @@ from app.models.document import DocumentRequest
 def test_small_document_aware_sections_are_not_split():
 
     document = DocumentRequest(
-        document_id="doc-1",
         notebook_id="notebook-1",
         title="React Basics",
         content="""# React

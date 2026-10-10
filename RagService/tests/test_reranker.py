@@ -15,7 +15,6 @@ def test_cross_encoder_receives_section_and_heading_path():
         RetrievedChunk(
             chunk=Chunk(
                 id="1",
-                document_id="doc-1",
                 notebook_id="notebook-1",
                 content="Chunking supports retrieval-augmented generation.",
                 chunk_index=0,
@@ -42,7 +41,6 @@ def test_cross_encoder_reranker():
         RetrievedChunk(
             chunk=Chunk(
                 id="1",
-                document_id="doc-1",
                 notebook_id="notebook-1",
                 content="React components are reusable pieces of UI.",
                 chunk_index=0,
@@ -52,7 +50,6 @@ def test_cross_encoder_reranker():
         RetrievedChunk(
             chunk=Chunk(
                 id="2",
-                document_id="doc-1",
                 notebook_id="notebook-1",
                 content="Python is commonly used for data analysis.",
                 chunk_index=1,

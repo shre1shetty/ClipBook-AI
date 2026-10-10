@@ -9,7 +9,6 @@ def test_context_builder():
         RetrievedChunk(
             chunk=Chunk(
                 id="1",
-                document_id="doc-1",
                 notebook_id="notebook-1",
                 content="Components are reusable pieces of UI in React.",
                 chunk_index=0,
@@ -22,7 +21,6 @@ def test_context_builder():
         RetrievedChunk(
             chunk=Chunk(
                 id="2",
-                document_id="doc-1",
                 notebook_id="notebook-1",
                 content="State allows components to remember information between renders.",
                 chunk_index=1,

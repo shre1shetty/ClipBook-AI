@@ -24,21 +24,11 @@ class RagService:
         
         built_context = self.context_builder.build(retrieved_chunks)
         print(f"\nBuilt context with {len(built_context.chunks)} chunks.")
-        # for chunk in built_context.chunks:
-        #     print(
-        #         f"\nDocument: {chunk.chunk.document_id}"
-        #         f"\nChunk: {chunk.chunk.id}"
-        #         f"\nContent: {chunk.chunk.content}"
-        #         f"\nHeading: {' > '.join(chunk.chunk.heading_path)}"
-        #         f"\nVector score: {chunk.similarity_score:.4f}"
-        #         f"\nRerank score: {chunk.rerank_score:.4f}"
-        #     )
         prompt= self.prompt_builder.build_prompt(query=request.query,context=built_context.text)
         print(f"\nGenerated prompt:\n{prompt}")
         answer = self.llm_service.generate(prompt=prompt)
         sources=[
                 RAGSource(
-                    document_id=result.chunk.document_id,
                     chunk_id=result.chunk.id,
                     heading_path=result.chunk.heading_path,
                     page_number=result.chunk.page_number,

@@ -22,6 +22,6 @@ class VectorRepository(ABC):
     @abstractmethod
     def delete_document(
         self,
-        document_id:str
+        notebook_id:str
     )->None:
         pass

@@ -7,7 +7,6 @@ from app.services.ingestion_service import IngestionService
 def test_ingestion_pipeline():
 
     document = DocumentRequest(
-        document_id="doc-1",
         notebook_id="notebook-1",
         title="React Basics",
         content="""# React

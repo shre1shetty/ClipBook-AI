@@ -2,7 +2,6 @@ from pydantic import BaseModel,Field
 
 class Chunk(BaseModel):
     id:str
-    document_id:str
     notebook_id:str
     content:str
     chunk_index:int

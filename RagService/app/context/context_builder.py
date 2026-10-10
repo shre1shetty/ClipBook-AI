@@ -39,11 +39,8 @@ class SimpleContextBuilder(ContextBuilder):
         for current in chunks[1:]:
             previous = result[-1]
 
-            is_adjacent = (
-                previous.document_id == current.document_id
-                and previous.chunk_index + 1 == current.chunk_index
-            )
-
+            is_adjacent = previous.chunk_index + 1 == current.chunk_index
+            
             if not is_adjacent:
                 result.append(current)
                 continue

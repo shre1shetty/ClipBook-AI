@@ -19,7 +19,7 @@ class IngestionService:
     def process(self,document:DocumentRequest)->list[EmbeddedChunk]:
         
         chunks=self.chunker.chunk(document)
-        
+        print("Chunks ready")
         texts=[]
         
         for chunk in chunks:
@@ -32,8 +32,9 @@ class IngestionService:
             
             passage_parts.append(f"Content: {chunk.content}")
             texts.append("\n".join(passage_parts))
-        
+        print("Chunks formatted")
         embeddings=self.embedding_service.embed(texts) #batching the embeddings to not call embedding recursively
+        print("Embedded chunks ready")
         embedded_chunks = [
             EmbeddedChunk(
                 chunk=chunk,
@@ -43,5 +44,11 @@ class IngestionService:
             in 
             zip(chunks,embeddings)
         ]
+        print("Chunks ready to upsert")
+        self.delete_document(notebook_id=document.notebook_id)
         self.vector_repository.upsert(embedded_chunks)
         return embedded_chunks
+    
+    def delete_document(self,notebook_id:str) -> None:
+        print(notebook_id)
+        self.vector_repository.delete_document(notebook_id=notebook_id)

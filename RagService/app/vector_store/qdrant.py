@@ -54,7 +54,6 @@ class QdrantVectorRepository(VectorRepository):
             chunk = item.chunk
 
             payload = {
-                "document_id": chunk.document_id,
                 "notebook_id": chunk.notebook_id,
                 "content": chunk.content,
                 "chunk_index": chunk.chunk_index,
@@ -100,7 +99,6 @@ class QdrantVectorRepository(VectorRepository):
             
             chunk=Chunk(
                 id=str(point.id),
-                document_id=payload.get("document_id"),
                 notebook_id=payload.get("notebook_id"),
                 content=payload.get("content"),
                 chunk_index=payload.get("chunk_index"),
@@ -119,15 +117,16 @@ class QdrantVectorRepository(VectorRepository):
             
         return retrieved_chunks
     
-    def delete_document(self, document_id:str) -> None:
+    def delete_document(self, notebook_id:str) -> None:
         self.client.delete(
             collection_name=self.collection_name,
             points_selector=Filter(
                 must=[
                     FieldCondition(
-                        key="document_id",
-                        match=MatchValue(value=document_id)
+                        key="notebook_id",
+                        match=MatchValue(value=notebook_id)
                     )
                 ]
-            )
+            ),
+            wait=True
         )

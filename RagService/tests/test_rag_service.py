@@ -21,7 +21,6 @@ def test_rag_service():
     notebook_id = "notebook-1"
 
     document = DocumentRequest(
-        document_id="doc-1",
         notebook_id=notebook_id,
         title="React Notes",
         content="""
@@ -49,7 +48,6 @@ def test_rag_service():
     embedded_chunks = ingestion_service.process(document)
     for chunk in embedded_chunks:
         print(
-            f"\nDocument: {chunk.chunk.document_id}"
             f"\nChunk: {chunk.chunk.id}"
             f"\nContent: {chunk.chunk.content}"
             f"\nContent length: {len(chunk.chunk.content)}"
@@ -84,21 +82,3 @@ def test_rag_service():
 
     print(f"\nAnswer : {response.answer}")
     
-    # for source in response.sources:
-    #     print(
-    #         f"\nDocument: {source.document_id}"
-    #         f"\nChunk: {source.chunk_id}"
-    #         f"\nHeading: {' > '.join(source.heading_path)}"
-    #         f"\nVector score: {source.similarity_score:.4f}"
-    #         f"\nRerank score: {source.rerank_score:.4f}"
-    #     )
-
-    # assert "What are reusable pieces of UI in React?" in response.answer
-    # assert "reusable pieces of UI" in response.answer
-    # assert "React > Components" in response.answer
-    # assert len(response.sources) > 0
-    # assert response.sources[0].document_id == "doc-1"
-    # assert response.sources[0].heading_path == [
-    # "React",
-    # "Components",
-    # ]

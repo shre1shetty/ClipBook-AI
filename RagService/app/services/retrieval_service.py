@@ -39,7 +39,6 @@ class RetrievalService:
         )
         reranked_chunks.sort(
             key=lambda result: (
-                result.chunk.document_id,
                 result.chunk.chunk_index,
             )
         )
@@ -47,7 +46,6 @@ class RetrievalService:
         print(f"\nRetrieved {len(reranked_chunks)} chunks after reranking.")
         for chunk in reranked_chunks:
             print(
-                f"\nDocument: {chunk.chunk.document_id}"
                 f"\nChunk: {chunk.chunk.id}"
                 f"\nChunk index: {chunk.chunk.chunk_index}"
                 f"\nContent: {chunk.chunk.content}"

@@ -1,7 +1,6 @@
 from pydantic import BaseModel,Field
 
 class DocumentRequest(BaseModel):
-    document_id:str
     notebook_id:str
     title:str
     content:str

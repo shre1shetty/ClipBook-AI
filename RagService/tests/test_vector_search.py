@@ -12,7 +12,6 @@ def test_vector_search():
 
     notebook_id = "notebook-1"
     document = DocumentRequest(
-        document_id="doc-1",
         notebook_id=notebook_id,
         title="React Notes",
         content="""

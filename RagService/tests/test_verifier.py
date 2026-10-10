@@ -10,7 +10,6 @@ def create_chunk(
     return RetrievedChunk(
         chunk=Chunk(
             id=chunk_id,
-            document_id="doc-1",
             notebook_id="notebook-1",
             content=f"Content {chunk_id}",
             chunk_index=int(chunk_id),

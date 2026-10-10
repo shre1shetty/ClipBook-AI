@@ -20,7 +20,6 @@ def test_bge_embedding():
 def test_clipbook_chunk_embedding_pipeline():
 
     document = DocumentRequest(
-        document_id="doc-1",
         notebook_id="notebook-1",
         title="React Basics",
         content="""# React
@@ -79,7 +78,6 @@ def test_oversized_section_is_recursively_split():
     )
 
     document = DocumentRequest(
-        document_id="doc-2",
         notebook_id="notebook-1",
         title="Large React Section",
         content=f"""# React

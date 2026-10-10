@@ -32,7 +32,6 @@ class DocumentChunker(Chunker):
                 chunks.append(
                     Chunk(
                         id=str(uuid.uuid4()),
-                        document_id=document.document_id,
                         notebook_id=document.notebook_id,
                         content=content_part,
                         chunk_index=len(chunks),
