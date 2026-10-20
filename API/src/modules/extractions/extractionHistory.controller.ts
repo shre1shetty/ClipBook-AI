@@ -6,24 +6,7 @@ import {
   getExtractionHistoryById,
   deleteExtractionHistory,
 } from "./extractionHistory.service.js";
-
-function getUserId(req: Request): string {
-  return (req as AuthenticatedRequest).user.id;
-}
-
-function parsePositiveInteger(value: unknown, fallback: number): number {
-  if (typeof value !== "string" || value.trim() === "") {
-    return fallback;
-  }
-
-  const parsed = Number(value);
-
-  if (!Number.isSafeInteger(parsed) || parsed < 1) {
-    throw new AppError(400, "Pagination values must be positive integers");
-  }
-
-  return parsed;
-}
+import { getUserId, parsePositiveInteger } from "../../util/util.js";
 
 export async function getExtractionHistory(
   req: Request,

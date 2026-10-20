@@ -8,7 +8,7 @@ import { errorHandler } from "./middleware/errorHandler.js";
 import cookieParser from "cookie-parser";
 import authRouter from "./modules/auth/auth.routes.js";
 import extractionHistoryRoutes from "./modules/extractions/extractionHistory.routes.js";
-
+import notebookRouter from "./modules/notebooks/notebook.routes.js";
 const app = express();
 
 app.disable("x-powered-by");
@@ -23,6 +23,7 @@ app.use(cookieParser());
 
 app.use("/api/auth", authRouter);
 app.use("/api/extractions", extractionHistoryRoutes);
+app.use("/api/notebooks", notebookRouter);
 
 app.get("/health", (req, res) => {
   res.status(200).json({
