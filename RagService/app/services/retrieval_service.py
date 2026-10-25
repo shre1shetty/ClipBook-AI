@@ -24,12 +24,12 @@ class RetrievalService:
     def retrieve(self,request: QueryRequest) -> list[RetrievedChunk]:
         optimized_query= self.query_optimizer.optimize(request.query)
         
-        query_embedding=self.embedding_service.embed([optimized_query])[0]
+        query_embedding=self.embedding_service.embed_query(optimized_query)
         
         candidates = self.vector_repository.search(
             query_embedding=query_embedding,
             notebook_id=request.notebook_id,
-            top_k=request.top_k * 3
+            top_k=request.top_k * 2
         )
         
         reranked_chunks = self.reranker.rerank(

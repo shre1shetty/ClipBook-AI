@@ -33,7 +33,7 @@ class IngestionService:
             passage_parts.append(f"Content: {chunk.content}")
             texts.append("\n".join(passage_parts))
         print("Chunks formatted")
-        embeddings=self.embedding_service.embed(texts) #batching the embeddings to not call embedding recursively
+        embeddings=self.embedding_service.embed_documents(texts) #batching the embeddings to not call embedding recursively
         print("Embedded chunks ready")
         embedded_chunks = [
             EmbeddedChunk(

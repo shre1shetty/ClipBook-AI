@@ -24,12 +24,12 @@ from app.chunking.document_chunker import DocumentChunker
 
 @lru_cache
 def get_embedding_service() -> EmbeddingService:
-    embedding_model = os.getenv("EMBEDDING_MODEL", "BAAI/bge-m3")
+    embedding_model = os.getenv("EMBEDDING_MODEL", "BAAI/bge-small-en-v1.5")
     return BGEEmbeddingService(model_name=embedding_model)
 
 @lru_cache
 def get_vector_repository() -> VectorRepository:
-    return QdrantVectorRepository(collection_name="clipbook_chunks",vector_size=1024)
+    return QdrantVectorRepository(collection_name="clipbook_chunks",vector_size=384)
 
 @lru_cache
 def get_query_optimizer() -> QueryOptimizer:
@@ -37,7 +37,7 @@ def get_query_optimizer() -> QueryOptimizer:
 
 @lru_cache
 def get_reranker() -> ReRanker:
-    reranker_model = os.getenv("RERANKER_MODEL","cross-encoder/ms-marco-MiniLM-L-6-v2")
+    reranker_model = os.getenv("RERANKER_MODEL","Xenova/ms-marco-MiniLM-L-6-v2")
     return CrossEncoderReRanker(model_name=reranker_model)
 
 @lru_cache
@@ -81,8 +81,8 @@ def get_rag_service() -> RagService:
 def get_ingestion_service() -> IngestionService:
     return IngestionService(
         chunker=DocumentChunker(
-            chunk_size=200,
-            chunk_overlap=50,
+            chunk_size=800,
+            chunk_overlap=120,
             ),
         embedding_service=get_embedding_service(),
         vector_repository=get_vector_repository()

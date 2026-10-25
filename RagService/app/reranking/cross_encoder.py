@@ -1,17 +1,20 @@
+import os
 from app.reranking.base import ReRanker
 from app.models.retrieved_chunk import RetrievedChunk
-from sentence_transformers import CrossEncoder
-
-
+from fastembed.rerank.cross_encoder import TextCrossEncoder
 class CrossEncoderReRanker(ReRanker):
-    def __init__(self, model_name: str="cross-encoder/ms-marco-MiniLM-L-6-v2"):
-        self.model=CrossEncoder(model_name)
+    def __init__(self, model_name: str):
+        self.model=TextCrossEncoder(
+            model_name=model_name,
+            cache_dir=os.getenv("MODEL_CACHE_DIR"),
+            threads=1
+        )
     
     def rerank(self, query:str, chunks: list[RetrievedChunk], top_k: int = 5) -> list[RetrievedChunk]:
         if not chunks:
             return []
         
-        pairs = []
+        passages = []
         for retrieved_chunk in chunks:
             chunk = retrieved_chunk.chunk
             passage_parts = []
@@ -23,9 +26,9 @@ class CrossEncoderReRanker(ReRanker):
                 passage_parts.append(f"Heading path: {heading_path}")
 
             passage_parts.append(f"Content: {chunk.content}")
-            pairs.append([query, "\n".join(passage_parts)])
+            passages.append("\n".join(passage_parts))
         
-        scores = self.model.predict(pairs)
+        scores = list(self.model.rerank(query, passages))
         
         reranked = [
             (chunk, float(score))
