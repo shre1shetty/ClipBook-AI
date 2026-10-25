@@ -25,7 +25,7 @@ const accessCookieOptions = {
 
 const refreshCookieOptions = {
   ...accessCookieOptions,
-  path: "/api/v1/auth",
+  path: "/api/auth",
 };
 
 const refreshCookieMaxAge = env.REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000;

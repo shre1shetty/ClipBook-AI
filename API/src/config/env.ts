@@ -8,6 +8,7 @@ const envSchema = z.object({
   PORT: z.coerce.number().int().min(1).max(65535).default(5000),
   MONGODB_URI: z.string().min(1, "MONGODB_URI is required"),
   FRONTEND_URL: z.string().url().default("http://localhost:5173"),
+  EXTRACTION_SERVICE_URL: z.string().url(),
   ACCESS_TOKEN_SECRET: z.string().min(32),
   ACCESS_TOKEN_TTL: z.string().default("15m"),
   REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(1),
