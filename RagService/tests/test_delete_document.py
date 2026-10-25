@@ -43,7 +43,7 @@ Components can accept inputs called props.
     repository.upsert(embedded_chunks_1)
 
     # Verify both documents exist
-    query_embedding = embedding_service.embed(["reusable code"])[0]
+    query_embedding = embedding_service.embed_query("reusable code")
 
     results_before_delete = repository.search(
         query_embedding=query_embedding,

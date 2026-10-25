@@ -11,11 +11,11 @@ def test_bge_embedding():
         "Python is a programming language."
     ]
 
-    embeddings = embedding_service.embed(texts)
+    embeddings = embedding_service.embed_documents(texts)
 
     assert len(embeddings) == 2
-    assert len(embeddings[0]) == 1024
-    assert len(embeddings[1]) == 1024
+    assert len(embeddings[0]) == 384
+    assert len(embeddings[1]) == 384
 
 def test_clipbook_chunk_embedding_pipeline():
 
@@ -63,13 +63,13 @@ State allows components to remember information between renders.
 
     texts = [chunk.content for chunk in chunks]
 
-    embeddings = embedding_service.embed(texts)
+    embeddings = embedding_service.embed_documents(texts)
 
     # Step 3: Validate
     assert len(embeddings) == len(chunks)
 
     for embedding in embeddings:
-        assert len(embedding) == 1024
+        assert len(embedding) == 384
         
 def test_oversized_section_is_recursively_split():
 

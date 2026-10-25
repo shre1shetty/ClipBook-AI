@@ -24,8 +24,8 @@ State allows components to remember information between renders.
     )
 
     chunker = DocumentChunker(
-        chunk_size=1000,
-        chunk_overlap=150,
+        chunk_size=800,
+        chunk_overlap=120,
     )
 
     embedding_service = BGEEmbeddingService()
@@ -50,4 +50,4 @@ State allows components to remember information between renders.
     assert len(embedded_chunks) > 0
 
     for item in embedded_chunks:
-        assert len(item.embedding) == 1024
+        assert len(item.embedding) == 384
