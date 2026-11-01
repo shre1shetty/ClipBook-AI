@@ -1,3 +1,4 @@
+import { Types } from "mongoose";
 import z from "zod";
 
 export const createNotebookSchema = z.strictObject({
@@ -7,6 +8,16 @@ export const createNotebookSchema = z.strictObject({
     .min(1, "Notebook title cannot be empty")
     .max(150, "Notebook title cannot exceed 150 characters"),
   content: z.string().optional(),
+  extractionIds: z
+    .array(
+      z
+        .string()
+        .refine((v) => Types.ObjectId.isValid(v), {
+          message: "Invalid ID format",
+        }),
+    )
+    .max(50)
+    .optional(),
 });
 
 export const updateNotebookSchema = z
@@ -19,6 +30,16 @@ export const updateNotebookSchema = z
       .optional(),
 
     content: z.string().optional(),
+    extractionIds: z
+      .array(
+        z
+          .string()
+          .refine((v) => Types.ObjectId.isValid(v), {
+            message: "Invalid ID format",
+          }),
+      )
+      .max(50)
+      .optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: "At least one field must be provided for an update",

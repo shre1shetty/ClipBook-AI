@@ -5,6 +5,8 @@ import {
 } from "./notebook.validation.js";
 import { AppError } from "../../shared/errors/AppError.js";
 import { Notebook, NotebookModel } from "./notebook.model.js";
+import { enqueueDeletion, enqueueIngestion } from "../rag/rag.queue.js";
+import { ExtractionHistoryModel } from "../extractions/extractionHistory.model.js";
 
 function validateUserId(userId: string): void {
   if (!Types.ObjectId.isValid(userId)) {
@@ -12,12 +14,28 @@ function validateUserId(userId: string): void {
   }
 }
 
+async function linkExtractions(
+  userId: string,
+  notebookId: string,
+  extractionIds: string[],
+): Promise<void> {
+  await ExtractionHistoryModel.updateMany(
+    {
+      _id: { $in: extractionIds },
+      userId,
+    },
+    {
+      $set: { notebookId },
+    },
+  );
+}
+
 export async function createNotebook(
   userId: string,
   input: CreateNotebookInput,
 ): Promise<Notebook> {
   validateUserId(userId);
-  return NotebookModel.create({
+  const notebook = await NotebookModel.create({
     userId,
     title: input.title,
     content: input.content,
@@ -25,6 +43,10 @@ export async function createNotebook(
     ragSyncStatus: "pending",
     ragSyncedVersion: 0,
   });
+  if (input.extractionIds && input.extractionIds.length > 0)
+    await linkExtractions(userId, String(notebook._id), input.extractionIds);
+  await enqueueIngestion(String(notebook._id), notebook.contentVersion);
+  return notebook;
 }
 
 export async function listNotebooks(userId: string): Promise<Notebook[]> {
@@ -66,12 +88,23 @@ export async function updateNotebook(
     throw new AppError(404, "Notebook not found");
   }
 
+  const existing = await NotebookModel.findOne({ _id: notebookId, userId })
+    .select("content")
+    .lean();
+
+  if (!existing) {
+    throw new AppError(404, "Notebook not found");
+  }
+
+  const contentChanged =
+    input.content !== undefined && input.content !== existing.content;
+
   const updates: Record<string, unknown> = {};
 
   updates.title = input.title;
   updates.content = input.content;
-  updates.$inc = { contentVersion: 1 };
-  updates.ragSyncStatus = "pending";
+  if (contentChanged) updates.ragSyncStatus = "pending";
+  if (contentChanged) updates.$inc = { contentVersion: 1 };
 
   const notebook = await NotebookModel.findOneAndUpdate(
     { _id: notebookId, userId },
@@ -81,6 +114,12 @@ export async function updateNotebook(
 
   if (!notebook) {
     throw new AppError(404, "Notebook not found");
+  }
+
+  if (contentChanged) {
+    if (input.extractionIds && input.extractionIds.length > 0)
+      await linkExtractions(userId, String(notebook._id), input.extractionIds);
+    await enqueueIngestion(String(notebook._id), notebook.contentVersion);
   }
 
   return notebook;
@@ -104,4 +143,9 @@ export async function deleteNotebook(
   if (result.deletedCount === 0) {
     throw new AppError(404, "Notebook not found");
   }
+  await ExtractionHistoryModel.updateMany(
+    { notebookId, userId },
+    { $set: { notebookId: null } },
+  );
+  await enqueueDeletion(notebookId);
 }

@@ -25,6 +25,7 @@ export function authenticate(
 
     next();
   } catch (error) {
+    console.log(error);
     if (error instanceof AppError) {
       next(error);
       return;

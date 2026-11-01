@@ -1,9 +1,19 @@
 import app from "./app.js";
 import { env } from "./config/env.js";
 import { connectDB, disconnectDB } from "./config/database.js";
+import { startRagWorker } from "./modules/rag/rag.worker.js";
+import { sweepUnsyncedNotebooks } from "./modules/rag/rag.sweeper.js";
+import { ragQueue } from "./modules/rag/rag.queue.js";
+import { redis } from "./modules/rag/rag.connection.js";
 
 async function bootstrap(): Promise<void> {
   await connectDB();
+
+  const worker = startRagWorker();
+
+  sweepUnsyncedNotebooks()
+    .then((count) => console.log(`RAG sweeper queued ${count} notebook(s)`))
+    .catch((error) => console.error("RAG sweeper failed:", error));
 
   const server = app.listen(env.PORT, () => {
     console.log(`ClipBook Main API running at http://localhost:${env.PORT}`);
@@ -20,9 +30,13 @@ async function bootstrap(): Promise<void> {
 
     server.close(async (error) => {
       try {
+        await worker.close();
+        await ragQueue.close();
+        await redis.quit();
         await disconnectDB();
       } catch (disconnectError) {
         console.error("MongoDB disconnect failed:", disconnectError);
+        console.error("Shutdown cleanup failed:", disconnectError);
         process.exitCode = 1;
       }
 

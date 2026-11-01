@@ -11,6 +11,8 @@ import {
   createNotebookSchema,
   updateNotebookSchema,
 } from "./notebook.validation.js";
+import { queryNotebookSchema } from "../rag/rag.validation.js";
+import { askNotebook } from "../rag/rag.service.js";
 
 export async function listNotebooksHandler(
   req: Request,
@@ -33,7 +35,6 @@ export async function createNotebookHandler(
   try {
     const input = createNotebookSchema.parse(req.body);
     const notebook = await createNotebook(getUserId(req), input);
-    //TASK TO DO : Asynchronously call rag service to ingest content
 
     res.status(200).json({ success: true, notebook });
   } catch (error) {
@@ -47,7 +48,7 @@ export async function getNotebookHandler(
   next: NextFunction,
 ): Promise<void> {
   try {
-    const notebook = getNotebookById(
+    const notebook = await getNotebookById(
       getUserId(req),
       req.params.notebookId?.toString(),
     );
@@ -69,7 +70,6 @@ export async function updateNotebookHandler(
       req.params.notebookId?.toString(),
       input,
     );
-    //TASK TO DO : Asynchronously call rag service to ingest content
 
     res.status(200).json({ success: true, notebook });
   } catch (error) {
@@ -84,9 +84,26 @@ export async function deleteNotebookHandler(
 ): Promise<void> {
   try {
     await deleteNotebook(getUserId(req), req.params.notebookId?.toString());
-    //TASK TO DO : Asynchronously call rag service to delete content
 
     res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function queryNotebookHandler(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const input = queryNotebookSchema.parse(req.body);
+    const answer = await askNotebook(
+      getUserId(req),
+      req.params.notebookId?.toString(),
+      input,
+    );
+    res.status(200).json({ success: true, answer });
   } catch (error) {
     next(error);
   }
