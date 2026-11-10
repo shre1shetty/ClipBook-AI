@@ -1,6 +1,7 @@
 import type { Request } from "express";
 import { AuthenticatedRequest } from "../middleware/authenticate.js";
 import { AppError } from "../shared/errors/AppError.js";
+import { Types } from "mongoose";
 
 export function parsePositiveInteger(value: unknown, fallback: number): number {
   if (typeof value !== "string" || value.trim() === "") {
@@ -18,4 +19,10 @@ export function parsePositiveInteger(value: unknown, fallback: number): number {
 
 export function getUserId(req: Request): string {
   return (req as AuthenticatedRequest).user.id;
+}
+
+export function validateUserId(userId: string): void {
+  if (!Types.ObjectId.isValid(userId)) {
+    throw new AppError(401, "Invalid authenticated user");
+  }
 }

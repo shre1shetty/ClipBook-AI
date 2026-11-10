@@ -72,3 +72,20 @@ export async function queryNotebook(input: {
 
   return data?.answer;
 }
+
+type TextChatResponse = {
+  answer: string;
+};
+
+export async function chatText(input: {
+  text: string;
+  message: string;
+  history: { role: "user" | "assistant"; content: string }[];
+}) {
+  const data = await ragRequest<TextChatResponse>("/api/rag/chat-text", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+
+  return data?.answer;
+}

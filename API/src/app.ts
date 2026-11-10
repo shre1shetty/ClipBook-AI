@@ -9,6 +9,8 @@ import cookieParser from "cookie-parser";
 import authRouter from "./modules/auth/auth.routes.js";
 import extractionHistoryRoutes from "./modules/extractions/extractionHistory.routes.js";
 import notebookRouter from "./modules/notebooks/notebook.routes.js";
+import searchRouter from "./modules/search/search.routes.js";
+import dashboardRouter from "./modules/dashboard/dashboard.routes.js";
 const app = express();
 
 app.disable("x-powered-by");
@@ -50,6 +52,8 @@ app.use((req, _res, next) => {
 app.use("/api/auth", authRouter);
 app.use("/api/extractions", extractionHistoryRoutes);
 app.use("/api/notebooks", notebookRouter);
+app.use("/api/search", searchRouter);
+app.use("/api", dashboardRouter);
 
 app.use(notFound);
 app.use(errorHandler);

@@ -11,6 +11,7 @@ const extractionClient = axios.create({
 
 interface ExtractionResult {
   content: string;
+  title?: string;
   source: "URL" | "Image";
 }
 

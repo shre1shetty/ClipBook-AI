@@ -18,6 +18,7 @@ export class FireCrawlerProvider implements URLProvider {
 
     return {
       content: result.markdown ?? "",
+      title: result.metadata?.title?.trim() || undefined,
       source: "URL",
     };
   }

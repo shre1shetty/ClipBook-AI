@@ -22,7 +22,12 @@ const extractionHistorySchema = new Schema(
       enum: ["URL", "IMAGE"],
       required: true,
     },
-
+    title: {
+      type: String,
+      trim: true,
+      default: null,
+      maxlength: 200,
+    },
     sourceUrl: {
       type: String,
       trim: true,

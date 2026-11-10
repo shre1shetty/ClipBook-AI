@@ -31,6 +31,8 @@ async function processJob(job: Job<RagJobData>): Promise<void> {
       $set: { ragSyncStatus: "synced", ragSyncedVersion: version },
       $unset: { ragSyncError: "" },
     },
+    // Background bookkeeping, not a user edit: keep updatedAt unchanged.
+    { timestamps: false },
   );
 }
 
@@ -61,6 +63,8 @@ export function startRagWorker(): Worker<RagJobData> {
           ragSyncError: error.message.slice(0, 500),
         },
       },
+      // Background bookkeeping, not a user edit: keep updatedAt unchanged.
+      { timestamps: false },
     ).catch((updateError) =>
       console.error("Could not mark notebook failed:", updateError),
     );

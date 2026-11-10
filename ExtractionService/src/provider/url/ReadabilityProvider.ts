@@ -46,6 +46,7 @@ export class ReadabilityProvider implements URLProvider {
 
     return {
       content: markdown.trim(),
+      title: article.title?.trim() || undefined,
       source: "URL",
     };
   }

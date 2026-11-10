@@ -11,6 +11,7 @@ from app.reranking.cross_encoder import CrossEncoderReRanker
 from app.verification.base import RetrieverVerifier
 from app.verification.simple_verifier import SimpleRetrieverVerifier
 from app.services.retrieval_service import RetrievalService
+from app.services.text_chat_service import TextChatService
 from app.context.base import ContextBuilder
 from app.context.context_builder import SimpleContextBuilder
 from app.prompt.base import PromptBuilder
@@ -86,4 +87,11 @@ def get_ingestion_service() -> IngestionService:
             ),
         embedding_service=get_embedding_service(),
         vector_repository=get_vector_repository()
+    )
+    
+@lru_cache
+def get_text_chat_service() -> TextChatService:
+    return TextChatService(
+        prompt_builder=get_prompt_builder(),
+        llm_service=get_generation_service()
     )

@@ -7,12 +7,7 @@ import { AppError } from "../../shared/errors/AppError.js";
 import { Notebook, NotebookModel } from "./notebook.model.js";
 import { enqueueDeletion, enqueueIngestion } from "../rag/rag.queue.js";
 import { ExtractionHistoryModel } from "../extractions/extractionHistory.model.js";
-
-function validateUserId(userId: string): void {
-  if (!Types.ObjectId.isValid(userId)) {
-    throw new AppError(401, "Invalid authenticated user");
-  }
-}
+import { validateUserId } from "../../util/util.js";
 
 async function linkExtractions(
   userId: string,
@@ -49,10 +44,42 @@ export async function createNotebook(
   return notebook;
 }
 
-export async function listNotebooks(userId: string): Promise<Notebook[]> {
+export async function attachExtractionCounts<T extends { _id: Types.ObjectId }>(
+  userId: string,
+  notebooks: T[],
+) {
+  const counts = await ExtractionHistoryModel.aggregate<{
+    _id: Types.ObjectId;
+    count: number;
+  }>([
+    {
+      $match: {
+        userId: new Types.ObjectId(userId),
+        notebookId: { $in: notebooks.map((notebook) => notebook._id) },
+      },
+    },
+    { $group: { _id: "$notebookId", count: { $sum: 1 } } },
+  ]);
+  const countByNotebook = new Map(
+    counts.map((item) => [String(item._id), item.count]),
+  );
+
+  return notebooks.map((notebook) => ({
+    ...notebook,
+    extractionCount: countByNotebook.get(String(notebook._id)) ?? 0,
+  }));
+}
+
+export async function listNotebooks(userId: string) {
   validateUserId(userId);
 
-  return NotebookModel.find({ userId }).sort({ updatedAt: -1 }).lean();
+  // The list view does not need the (potentially large) content.
+  const notebooks = await NotebookModel.find({ userId })
+    .select("-content")
+    .sort({ updatedAt: -1 })
+    .lean();
+
+  return attachExtractionCounts(userId, notebooks);
 }
 
 export async function getNotebookById(
