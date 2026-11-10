@@ -1,0 +1,6 @@
+.account { max-width: 640px; margin-top: 24px; padding: 22px; }
+.account h2 { margin: 0 0 18px; font-size: 17px; }
+.account dl { display: grid; gap: 16px; margin: 0; }
+.account dl div { display: grid; gap: 5px; }
+.account dt { color: var(--muted); font-size: 13px; }
+.account dd { margin: 0; }

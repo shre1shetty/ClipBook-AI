@@ -1,0 +1,7 @@
+.panel { max-width: 860px; margin-top: 22px; padding: 18px; }
+.bookTitle { flex: 1; min-width: 0; }
+.bookTitle strong, .bookTitle small { display: block; }
+.bookTitle small { margin-top: 4px; color: var(--muted); }
+.edited { min-width: 110px; color: var(--muted); text-align: right; }
+.panel h2 { margin: 0 0 18px; font-size: 18px; }
+.panel form { display: grid; gap: 16px; }

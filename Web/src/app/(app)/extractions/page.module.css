@@ -1,0 +1,34 @@
+.quick { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(230px, 1fr) auto; gap: 12px; align-items: end; margin-top: 20px; padding: 18px; }
+.quick h2 { grid-column: 1 / -1; margin: 0 0 2px; font-size: 15px; }
+.quick label span { display: flex; align-items: center; gap: 6px; color: var(--muted); }
+.upload { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 8px 12px; border: 1px dashed #cbc9c3; border-radius: 8px; color: var(--muted); cursor: pointer; }
+.upload input { display: none; }
+.clearFile { display: flex; align-items: center; gap: 4px; justify-self: start; border: 0; background: none; color: var(--muted); }
+.list { padding: 0 18px; }
+.item { display: flex; align-items: center; gap: 12px; min-height: 72px; border-bottom: 1px solid #f1f0ed; }
+.item:last-child { border-bottom: 0; }
+.title { flex: 1; min-width: 100px; padding: 0; text-align: left; border: 0; background: none; }
+.title strong, .title small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.title small { margin-top: 4px; color: var(--muted); }
+.notebookName { color: var(--blue); font-size: 13px; }
+.item select { width: 180px; }
+.chatDialog { display: flex; flex-direction: column; width: min(660px, 100%); max-height: 85vh; }
+.dialogTitle { margin: 0; font-size: 18px; }
+.chatDialog header { align-items: flex-start; }
+.dialogDescription { margin: 5px 0 0; }
+.close { display: grid; place-items: center; border: 0; background: transparent; }
+.conversation { display: grid; gap: 10px; min-height: 160px; max-height: 55vh; margin: 20px 0; overflow: auto; }
+.conversation details { padding: 12px; border: 1px solid var(--line); border-radius: 8px; color: var(--muted); }
+.conversation details p { max-height: 120px; overflow: auto; white-space: pre-wrap; }
+.conversation > p { max-width: 85%; margin: 0; padding: 10px 12px; border-radius: 10px; line-height: 1.5; white-space: pre-wrap; }
+.userMessage { justify-self: end; background: var(--blue-soft); }
+.assistantMessage { justify-self: start; background: #f4f3f0; }
+.chatForm { display: flex; gap: 8px; }
+.chatForm input { flex: 1; }
+@media (max-width: 760px) {
+  .quick { grid-template-columns: 1fr; }
+  .quick h2 { grid-column: 1; }
+  .item { flex-wrap: wrap; padding: 12px 0; }
+  .title { flex-basis: calc(100% - 60px); }
+  .item select { flex: 1; }
+}

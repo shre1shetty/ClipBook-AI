@@ -1,0 +1,4 @@
+.container { display: grid; min-height: 100vh; place-items: center; padding: 24px; text-align: center; }
+.container p { color: var(--blue); font-weight: 700; }
+.container h1 { margin: 8px 0 20px; }
+.container a { color: var(--blue); font-weight: 600; }

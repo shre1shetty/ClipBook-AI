@@ -1,0 +1,9 @@
+.page { display: grid; min-height: 100vh; place-items: center; padding: 24px; background: #f7f7f5; }
+.panel { width: min(420px, 100%); padding: 32px; border: 1px solid var(--line); border-radius: 14px; background: white; }
+.brand { display: inline-block; margin-bottom: 30px; font-size: 19px; font-weight: 700; }
+.brand span { color: var(--blue); }
+.title { margin: 0 0 8px; font-size: 25px; }
+.intro { margin: 0 0 24px; color: var(--muted); line-height: 1.5; }
+.form { display: grid; gap: 16px; }
+.footer { margin: 22px 0 0; color: var(--muted); text-align: center; }
+.footer a { color: var(--blue); font-weight: 600; }

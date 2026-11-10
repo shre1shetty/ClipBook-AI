@@ -13,6 +13,8 @@ import {
   registerUser,
 } from "./auth.service.js";
 import { AppError } from "../../shared/errors/AppError.js";
+import { getUserId } from "../../util/util.js";
+import { UserModel } from "../users/user.model.js";
 const ACCESS_COOKIE = "accessToken";
 const REFRESH_COOKIE = "refreshToken";
 
@@ -127,6 +129,27 @@ export async function logout(
     clearAuthCookies(res);
 
     res.status(200).send();
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function me(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const user = await UserModel.findById(getUserId(req)).select("name email");
+    if (!user) throw new AppError(401, "Authentication required");
+
+    res.status(200).json({
+      user: {
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+      },
+    });
   } catch (error) {
     next(error);
   }

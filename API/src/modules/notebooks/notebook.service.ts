@@ -143,9 +143,10 @@ export async function updateNotebook(
     throw new AppError(404, "Notebook not found");
   }
 
+  if (input.extractionIds && input.extractionIds.length > 0) {
+    await linkExtractions(userId, String(notebook._id), input.extractionIds);
+  }
   if (contentChanged) {
-    if (input.extractionIds && input.extractionIds.length > 0)
-      await linkExtractions(userId, String(notebook._id), input.extractionIds);
     await enqueueIngestion(String(notebook._id), notebook.contentVersion);
   }
 

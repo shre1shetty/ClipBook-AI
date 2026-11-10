@@ -1,0 +1,37 @@
+.button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 40px; padding: 0 14px; border: 1px solid var(--line);
+  border-radius: 8px; background: #fff; color: var(--ink); font-weight: 600;
+}
+.button:hover { background: #f7f7f5; }
+.primary { border-color: var(--blue); background: var(--blue); color: white; }
+.primary:hover { background: #263dc5; }
+.wide { width: 100%; }
+.input, .textarea, .select {
+  width: 100%; min-height: 42px; padding: 10px 12px; border: 1px solid var(--line);
+  border-radius: 8px; background: white; outline-color: var(--blue);
+}
+.textarea { min-height: 112px; resize: vertical; }
+.card { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.eyebrow { color: var(--muted); font-size: 13px; }
+.error { color: #b42318; font-size: 13px; }
+.tag { display: inline-flex; align-items: center; border-radius: 6px; padding: 4px 8px; font-size: 12px; font-weight: 600; }
+.url { color: var(--teal); background: var(--teal-soft); }
+.image { color: var(--orange); background: var(--orange-soft); }
+.indexed { color: var(--green); background: var(--green-soft); }
+.indexing { color: #946200; background: #fff2dc; }
+.tabs { display: flex; gap: 22px; border-bottom: 1px solid var(--line); margin: 18px 0; }
+.tab { padding: 0 0 10px; color: var(--muted); border: 0; border-bottom: 2px solid transparent; background: transparent; }
+.tabSelected { color: var(--blue); border-bottom-color: var(--blue); font-weight: 600; }
+.field { display: grid; gap: 7px; }
+.pageTitle { margin: 0; font-size: 24px; }
+.pageSubtitle { margin: 3px 0 0; color: var(--muted); }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.list { display: grid; }
+.listItem { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 16px 0; border-bottom: 1px solid #f1f0ed; }
+.listItem:last-child { border-bottom: 0; }
+.muted { color: var(--muted); }
+.loading { padding: 36px 0; color: var(--muted); text-align: center; }
+.dialogOverlay { position: fixed; inset: 0; z-index: 50; background: #15151566; }
+.dialogContent { position: fixed; top: 50%; left: 50%; z-index: 51; max-height: calc(100dvh - 36px); overflow: auto; transform: translate(-50%, -50%); }
+.dialog { width: min(480px, 100%); padding: 22px; border-radius: 14px; background: white; box-shadow: 0 18px 60px #0002; }
