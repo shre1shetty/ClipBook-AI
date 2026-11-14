@@ -14,9 +14,19 @@
 .editor :global(.tiptap h2) { font-size: 22px; }
 .extractions { display: grid; align-content: start; gap: 12px; padding: 22px 16px; border-left: 1px solid var(--line); background: #fff; }
 .extractions h2 { margin: 0; font-size: 15px; }
+.askPanel { display: grid; gap: 12px; padding: 14px; border: 1px solid var(--line); border-radius: 9px; background: #fcfcfb; }
+.askPanel h2 { display: inline-flex; align-items: center; gap: 7px; }
+.askForm { display: grid; gap: 10px; }
+.answer { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid var(--line); }
+.answer p { margin: 0; line-height: 1.55; white-space: pre-wrap; }
+.answer small { line-height: 1.4; }
 .extraction { display: grid; gap: 9px; padding: 12px; border: 1px solid var(--line); border-radius: 9px; }
 .extraction small, .extraction p { color: var(--muted); }
 .extraction p { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chatHistory { display: grid; gap: 10px; max-height: 320px; overflow: auto; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: #fcfcfb; }
+.chatMessage { display: grid; gap: 6px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+.chatMessage:last-child { padding-bottom: 0; border-bottom: 0; }
+.chatMessage p { margin: 0; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
 .preview { max-height: 180px; overflow: auto; padding: 10px; border: 1px solid var(--line); border-radius: 8px; color: var(--muted); line-height: 1.5; white-space: pre-wrap; user-select: text; }
 @media (max-width: 900px) { .workspace { grid-template-columns: 1fr; } .extractions { border-top: 1px solid var(--line); border-left: 0; } }
 @media (max-width: 680px) { .header { flex-wrap: wrap; } .saved { display: none; } .editorColumn { padding: 20px 16px; } }

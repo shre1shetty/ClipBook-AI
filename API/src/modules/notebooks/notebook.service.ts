@@ -38,8 +38,9 @@ export async function createNotebook(
     ragSyncStatus: "pending",
     ragSyncedVersion: 0,
   });
-  if (input.extractionIds && input.extractionIds.length > 0)
+  if (input.extractionIds && input.extractionIds.length > 0) {
     await linkExtractions(userId, String(notebook._id), input.extractionIds);
+  }
   await enqueueIngestion(String(notebook._id), notebook.contentVersion);
   return notebook;
 }

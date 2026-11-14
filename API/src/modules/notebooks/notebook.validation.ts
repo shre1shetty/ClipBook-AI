@@ -12,7 +12,7 @@ export const createNotebookSchema = z.strictObject({
     .array(
       z
         .string()
-        .refine((v) => Types.ObjectId.isValid(v), {
+        .refine((value) => Types.ObjectId.isValid(value), {
           message: "Invalid ID format",
         }),
     )
@@ -34,7 +34,7 @@ export const updateNotebookSchema = z
       .array(
         z
           .string()
-          .refine((v) => Types.ObjectId.isValid(v), {
+          .refine((value) => Types.ObjectId.isValid(value), {
             message: "Invalid ID format",
           }),
       )

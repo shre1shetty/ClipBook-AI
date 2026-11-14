@@ -4,5 +4,6 @@ export interface ApiReader {
 
 export interface ApiClient extends ApiReader {
   post<T>(path: string, value?: unknown): Promise<T>;
+  delete<T>(path: string): Promise<T>;
   upload<T>(path: string, file: File): Promise<T>;
 }

@@ -11,6 +11,7 @@ import type {
   UpdateExtractionInput,
 } from "./extractionHistory.validation.js";
 import { validateUserId } from "../../util/util.js";
+import { ExtractionChatModel } from "./extractionChat.model.js";
 
 export async function createExtractionHistory(
   userId: string,
@@ -136,4 +137,5 @@ export async function deleteExtractionHistory(
   if (result.deletedCount === 0) {
     throw new AppError(404, "Extraction history not found");
   }
+  await ExtractionChatModel.deleteMany({ userId, extractionId });
 }

@@ -18,7 +18,10 @@ import {
   listExtractionsQuerySchema,
   updateExtractionSchema,
 } from "./extractionHistory.validation.js";
-import { chatWithExtraction } from "./extractionChat.service.js";
+import {
+  chatWithExtraction,
+  getExtractionChatHistory,
+} from "./extractionChat.service.js";
 
 function urlTitle(url: string, extractedTitle?: string): string {
   const title = extractedTitle?.trim();
@@ -185,6 +188,23 @@ export async function chatExtraction(
     );
 
     res.status(200).json({ success: true, ...result });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getExtractionChat(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const history = await getExtractionChatHistory(
+      getUserId(req),
+      req.params.extractionId?.toString(),
+    );
+
+    res.status(200).json({ success: true, ...history });
   } catch (error) {
     next(error);
   }

@@ -13,6 +13,18 @@ export interface NotebookExtractionsData {
   items: Extraction[];
 }
 
+export interface NotebookQuestionResult {
+  answer: string;
+  index: {
+    status: "pending" | "synced" | "failed";
+    upToDate: boolean;
+  };
+}
+
+export interface NotebookQuestionData {
+  answer: NotebookQuestionResult;
+}
+
 export function getNotebooks(reader: ApiReader) {
   return reader.get<NotebookListData>("/notebooks");
 }
@@ -39,5 +51,20 @@ export function updateNotebook(
   return client.post<NotebookData>(
     `/notebooks/update/${encodeURIComponent(notebookId)}`,
     input,
+  );
+}
+
+export function deleteNotebook(client: ApiClient, notebookId: string) {
+  return client.delete<void>(`/notebooks/${encodeURIComponent(notebookId)}`);
+}
+
+export function askNotebook(
+  client: ApiClient,
+  notebookId: string,
+  query: string,
+) {
+  return client.post<NotebookQuestionData>(
+    `/notebooks/query/${encodeURIComponent(notebookId)}`,
+    { query },
   );
 }

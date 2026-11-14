@@ -2,6 +2,10 @@
 .bookTitle { flex: 1; min-width: 0; }
 .bookTitle strong, .bookTitle small { display: block; }
 .bookTitle small { margin-top: 4px; color: var(--muted); }
+.notebookLink { flex: 1; min-width: 0; color: inherit; }
+.deleteButton { display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 8px; background: white; color: var(--muted); cursor: pointer; }
+.deleteButton:hover:not(:disabled) { color: #b42318; background: #fff5f4; }
+.deleteButton:disabled { cursor: wait; opacity: .6; }
 .edited { min-width: 110px; color: var(--muted); text-align: right; }
 .panel h2 { margin: 0 0 18px; font-size: 18px; }
 .panel form { display: grid; gap: 16px; }

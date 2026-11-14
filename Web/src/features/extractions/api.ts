@@ -10,6 +10,17 @@ export interface ExtractionData {
   extraction: Extraction;
 }
 
+export interface ExtractionChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  createdAt: string;
+}
+
+export interface ExtractionChatHistoryData {
+  messages: ExtractionChatMessage[];
+}
+
 export function getExtractions(
   reader: ApiReader,
   options: { filter?: string; notebookId?: string; limit?: number } = {},
@@ -32,6 +43,15 @@ export function getExtraction(reader: ApiReader, extractionId: string) {
   );
 }
 
+export function getExtractionChat(
+  reader: ApiReader,
+  extractionId: string,
+) {
+  return reader.get<ExtractionChatHistoryData>(
+    `/extractions/${encodeURIComponent(extractionId)}/chat`,
+  );
+}
+
 export function extractUrl(client: ApiClient, url: string) {
   return client.post<ExtractionData>("/extractions/url", { url });
 }
@@ -40,13 +60,16 @@ export function extractImage(client: ApiClient, file: File) {
   return client.upload<ExtractionData>("/extractions/image", file);
 }
 
+export function deleteExtraction(client: ApiClient, extractionId: string) {
+  return client.delete<void>(
+    `/extractions/${encodeURIComponent(extractionId)}`,
+  );
+}
+
 export function chatWithExtraction(
   client: ApiClient,
   extractionId: string,
-  input: {
-    message: string;
-    history: Array<{ role: "user" | "assistant"; content: string }>;
-  },
+  input: { message: string },
 ) {
   return client.post<{ answer: string }>(
     `/extractions/${encodeURIComponent(extractionId)}/chat`,

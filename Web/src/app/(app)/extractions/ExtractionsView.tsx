@@ -1,21 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Dialog from "@radix-ui/react-dialog";
-import { Link2, MessageCircle, Upload, X } from "lucide-react";
+import { Link2, MessageCircle, Trash2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/shared/api/client";
 import type { Extraction } from "@/shared/api/types";
 import {
   chatWithExtraction,
+  deleteExtraction,
   extractImage,
   extractUrl,
+  getExtractionChat,
   getExtraction,
   getExtractions,
 } from "@/features/extractions";
 import type {
+  ExtractionChatMessage,
   ExtractionData,
   ExtractionListData,
 } from "@/features/extractions/api";
@@ -26,7 +29,7 @@ import ui from "@/shared/ui/ui.module.css";
 import styles from "./page.module.css";
 
 type Filter = "all" | "unassigned" | "URL" | "IMAGE";
-type ChatMessage = { role: "user" | "assistant"; content: string };
+type ChatMessage = ExtractionChatMessage;
 
 export default function ExtractionsView({
   initialFilter = "all",
@@ -48,6 +51,7 @@ export default function ExtractionsView({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [message, setMessage] = useState("");
   const [chatBusy, setChatBusy] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const query = useSearchParams();
   const router = useRouter();
   const client = useQueryClient();
@@ -80,6 +84,18 @@ export default function ExtractionsView({
     enabled: Boolean(selectedId),
     initialData: initialSelected,
   });
+  const chatHistory = useQuery({
+    queryKey: ["extraction-chat", selectedId],
+    queryFn: () => {
+      if (!selectedId) throw new Error("An extraction id is required");
+      return getExtractionChat(api, selectedId);
+    },
+    enabled: Boolean(selectedId),
+  });
+  useEffect(() => {
+    setMessages(chatHistory.data?.messages ?? []);
+  }, [selectedId, chatHistory.data]);
+  console.log(initialSelected, extractions);
   const items = extractions.data?.items ?? [];
   const count = extractions.data?.pagination?.total ?? items.length;
 
@@ -125,28 +141,80 @@ export default function ExtractionsView({
     }
   };
 
+  const removeExtraction = async (item: Extraction) => {
+    if (
+      !window.confirm(
+        `Delete "${item.title || "Untitled extraction"}"? This cannot be undone.`,
+      )
+    ) {
+      return;
+    }
+
+    setDeletingId(item._id);
+    try {
+      await deleteExtraction(api, item._id);
+      toast.success("Extraction deleted");
+      await Promise.all([
+        client.invalidateQueries({ queryKey: ["extractions"] }),
+        client.invalidateQueries({ queryKey: ["notebooks"] }),
+        client.invalidateQueries({ queryKey: ["notebook-extractions"] }),
+        client.invalidateQueries({ queryKey: ["extraction", item._id] }),
+        client.invalidateQueries({ queryKey: ["dashboard"] }),
+      ]);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Could not delete extraction",
+      );
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   const sendMessage = async (event: React.FormEvent) => {
     event.preventDefault();
     const extraction = selected.data?.extraction;
-    if (!selectedId || !extraction || !message.trim()) return;
+    if (
+      !selectedId ||
+      !extraction ||
+      chatHistory.isLoading ||
+      !message.trim()
+    ) {
+      return;
+    }
     const currentMessage = message.trim();
-    const history = messages;
+    const pendingMessageId = `pending-${Date.now()}`;
     setMessage("");
     setMessages((items) => [
       ...items,
-      { role: "user", content: currentMessage },
+      {
+        id: pendingMessageId,
+        role: "user",
+        content: currentMessage,
+        createdAt: new Date().toISOString(),
+      },
     ]);
     setChatBusy(true);
     try {
       const result = await chatWithExtraction(api, selectedId, {
         message: currentMessage,
-        history,
       });
       setMessages((items) => [
         ...items,
-        { role: "assistant", content: result.answer },
+        {
+          id: `pending-${Date.now()}`,
+          role: "assistant",
+          content: result.answer,
+          createdAt: new Date().toISOString(),
+        },
       ]);
+      await client.invalidateQueries({
+        queryKey: ["extraction-chat", selectedId],
+      });
     } catch (error) {
+      setMessages((items) =>
+        items.filter((entry) => entry.id !== pendingMessageId),
+      );
+      setMessage((current) => current || currentMessage);
       toast.error(
         error instanceof Error ? error.message : "Could not get an answer",
       );
@@ -268,8 +336,9 @@ export default function ExtractionsView({
                       : (item.notebookId ?? "")
                   }
                   onChange={(event) => {
-                    if (event.target.value)
+                    if (event.target.value) {
                       void addToNotebook(item._id, event.target.value);
+                    }
                   }}
                 >
                   <option value="" disabled>
@@ -291,6 +360,14 @@ export default function ExtractionsView({
                 }}
               >
                 <MessageCircle size={16} /> Chat
+              </button>
+              <button
+                className={ui.button}
+                aria-label={`Delete ${item.title ?? "extraction"}`}
+                disabled={deletingId !== null}
+                onClick={() => void removeExtraction(item)}
+              >
+                <Trash2 size={16} />
               </button>
             </article>
           ))
@@ -341,12 +418,23 @@ export default function ExtractionsView({
                   </p>
                 )}
                 {selected.data?.extraction.extractedContent && (
-                  <details>
+                  <details open>
                     <summary>View extracted text</summary>
                     <p>
                       {selected.data.extraction.extractedContent.slice(0, 4000)}
                     </p>
                   </details>
+                )}
+                {chatHistory.isLoading && (
+                  <p className={ui.muted}>Loading chat history…</p>
+                )}
+                {chatHistory.error && (
+                  <p className={ui.error}>
+                    Could not load chat history.{" "}
+                    <button onClick={() => void chatHistory.refetch()}>
+                      Try again
+                    </button>
+                  </p>
                 )}
                 {messages.map((entry, index) => (
                   <p
@@ -355,7 +443,7 @@ export default function ExtractionsView({
                         ? styles.userMessage
                         : styles.assistantMessage
                     }
-                    key={`${entry.role}-${index}`}
+                    key={entry.id || `${entry.role}-${index}`}
                   >
                     {entry.content}
                   </p>
@@ -372,7 +460,9 @@ export default function ExtractionsView({
                 />
                 <button
                   className={`${ui.button} ${ui.primary}`}
-                  disabled={chatBusy || !message.trim()}
+                  disabled={
+                    chatBusy || chatHistory.isLoading || !message.trim()
+                  }
                 >
                   Send
                 </button>

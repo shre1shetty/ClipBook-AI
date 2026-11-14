@@ -4,6 +4,7 @@ import {
   chatExtraction,
   extractImage,
   extractUrl,
+  getExtractionChat,
   getExtractionHistory,
   getExtractionHistoryItem,
   removeExtractionHistory,
@@ -18,6 +19,7 @@ router.use(authenticate);
 router.get("/", getExtractionHistory);
 router.post("/url", extractUrl);
 router.post("/image", uploadImage, extractImage);
+router.get("/:extractionId/chat", getExtractionChat);
 router.get("/:extractionId", getExtractionHistoryItem);
 router.patch("/:extractionId", updateExtraction);
 router.post("/:extractionId/chat", chatExtraction);

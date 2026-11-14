@@ -56,15 +56,6 @@ export const chatExtractionSchema = z.object({
     .trim()
     .min(1, "Message cannot be empty")
     .max(4_000, "Message is too long"),
-  history: z
-    .array(
-      z.strictObject({
-        role: z.enum(["user", "assistant"]),
-        content: z.string().min(1).max(4_000),
-      }),
-    )
-    .max(20)
-    .default([]),
   text: z.string().min(1).max(60_000).optional(),
 });
 
