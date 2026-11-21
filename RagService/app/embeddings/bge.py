@@ -9,6 +9,15 @@ class BGEEmbeddingService(EmbeddingService):
             cache_dir=os.getenv("MODEL_CACHE_DIR"),
             threads=1, # verify this argument in your fastembed version
         )
+        # Reuse the model's own tokenizer so counts match what the embedder sees
+        inner = self.model.model
+        if getattr(inner, "tokenizer", None) is None and hasattr(inner, "_ensure_tokenizer"):
+            inner._ensure_tokenizer()
+        self._tokenizer = inner.tokenizer
+
+    def count_tokens(self, text: str) -> int:
+        # Counts are capped at the model's max length (512), which is fine for budgeting
+        return len(self._tokenizer.encode(text, add_special_tokens=False).ids)
     
     def embed_documents(self, texts:list[str])->list[list[float]]:
         if not texts:

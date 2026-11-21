@@ -8,3 +8,7 @@ class EmbeddingService(ABC):
     @abstractmethod
     def embed_query(self, query: str) -> list[float]:
         pass
+
+    @abstractmethod
+    def count_tokens(self, text: str) -> int:
+        pass

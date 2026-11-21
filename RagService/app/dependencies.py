@@ -57,7 +57,10 @@ def get_retrieval_service() -> RetrievalService:
 
 @lru_cache
 def get_context_builder() -> ContextBuilder:
-    return SimpleContextBuilder(max_characters = 8000)
+    return SimpleContextBuilder(
+        count_tokens=get_embedding_service().count_tokens,
+        max_tokens=2000,
+    )
 
 @lru_cache
 def get_prompt_builder() -> PromptBuilder:
@@ -82,8 +85,9 @@ def get_rag_service() -> RagService:
 def get_ingestion_service() -> IngestionService:
     return IngestionService(
         chunker=DocumentChunker(
-            chunk_size=800,
-            chunk_overlap=120,
+            count_tokens=get_embedding_service().count_tokens,
+            chunk_size=256,
+            chunk_overlap=40,
             ),
         embedding_service=get_embedding_service(),
         vector_repository=get_vector_repository()

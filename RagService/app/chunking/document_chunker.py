@@ -1,14 +1,21 @@
 import re
 import uuid
+from typing import Callable
 from app.chunking.base import Chunker
 from app.models.document import DocumentRequest
 from app.models.chunk import Chunk
 
 
 class DocumentChunker(Chunker):
-    def __init__(self,chunk_size:int=1000,chunk_overlap:int=150): #constructor
+    def __init__(
+        self,
+        count_tokens:Callable[[str],int],
+        chunk_size:int=256, # max tokens of chunk content
+        chunk_overlap:int=40 # tokens
+    ): #constructor
         if chunk_overlap>=chunk_size:
             raise ValueError("chunk_overlap must be smaller than chunk_size")
+        self.count_tokens=count_tokens
         self.chunk_size=chunk_size
         self.chunk_overlap=chunk_overlap
     
@@ -21,7 +28,7 @@ class DocumentChunker(Chunker):
             content=section["content"]
             
             # If chunk is already small enough.
-            if len(content) <= self.chunk_size:
+            if self.count_tokens(content) <= self.chunk_size:
                 split_contents = [content]
             
             # If chunk is greater than size split recursively
@@ -107,7 +114,7 @@ class DocumentChunker(Chunker):
     
     def _split_recursive(self,text:str,seperators:list[str])->list[str]:
         # If this piece is already small enough, no further splitting is necessary
-        if len(text)<=self.chunk_size:
+        if self.count_tokens(text)<=self.chunk_size:
             return [text]
         
         # Recursively call _split_recursive till chunk is less than equal to chunk_size
@@ -133,7 +140,7 @@ class DocumentChunker(Chunker):
         for segment in segments:
             candidate = current + segment
             
-            if len(candidate)<=self.chunk_size:
+            if self.count_tokens(candidate)<=self.chunk_size:
                 current=candidate
                 continue
             
@@ -144,7 +151,7 @@ class DocumentChunker(Chunker):
             
             # If length of individual part is greater than chunk size
             
-            if len(segment)> self.chunk_size:
+            if self.count_tokens(segment)> self.chunk_size:
                 nested_chunks=self._split_recursive(segment,seperators[1:])
                 chunks.extend(nested_chunks)
                 current=''
@@ -157,15 +164,26 @@ class DocumentChunker(Chunker):
         return chunks
         
     def _hard_split(self,text:str)->list[str]:
-        # Last option when no seperator is useful
+        # Last option when no seperator is useful: largest prefix that fits the token budget
         chunks:list[str]=[]
         start=0
         
         while start < len(text):
-            end=min(
-                start+self.chunk_size,
-                len(text)
-            )
+            # Binary search for the furthest end that still fits chunk_size tokens
+            low,high=start+1,len(text)
+            while low<high:
+                mid=(low+high+1)//2
+                if self.count_tokens(text[start:mid])<=self.chunk_size:
+                    low=mid
+                else:
+                    high=mid-1
+            end=low
+            
+            # Prefer cutting at whitespace so words are not split
+            if end<len(text):
+                space=text.rfind(" ",start+1,end)
+                if space>start:
+                    end=space
             
             chunk=text[start:end].strip()
             
@@ -188,17 +206,16 @@ class DocumentChunker(Chunker):
             previous = chunks[i - 1]
             current = chunks[i]
     
-            # Reserve one character for the space joining overlap to current.
-            available_space = self.chunk_size - len(current) - 1
+            # Token room left in this chunk for the overlap.
+            available_tokens = self.chunk_size - self.count_tokens(current)
     
-            if available_space <= 0:
+            if available_tokens <= 0:
                 overlapped.append(current)
                 continue
     
             overlap_limit = min(
                 self.chunk_overlap,
-                available_space,
-                len(previous)
+                available_tokens
             )
     
             overlap = self._get_overlap(previous, overlap_limit)
@@ -209,17 +226,18 @@ class DocumentChunker(Chunker):
     
         return overlapped
 
-    def _get_overlap(self, text: str, max_size: int) -> str:
-        if not text or max_size <= 0:
+    def _get_overlap(self, text: str, max_tokens: int) -> str:
+        if not text or max_tokens <= 0:
             return ""
 
-        start = max(0, len(text) - max_size)
+        # Take whole words from the end while they still fit in max_tokens.
+        words = text.split()
+        start = len(words)
 
-        # Move forward to a word boundary instead of retaining a partial word.
-        if start > 0 and not text[start - 1].isspace():
-            while start < len(text) and not text[start].isspace():
-                start += 1
-            while start < len(text) and text[start].isspace():
-                start += 1
+        while start > 0:
+            candidate = " ".join(words[start - 1:])
+            if self.count_tokens(candidate) > max_tokens:
+                break
+            start -= 1
 
-        return text[start:].strip()
+        return " ".join(words[start:])

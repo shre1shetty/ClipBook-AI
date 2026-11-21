@@ -1,10 +1,11 @@
+from typing import Callable
 from app.context.base import ContextBuilder
 from app.models.retrieved_chunk import RetrievedChunk
-from app.models.chunk import Chunk
 from app.models.built_context import BuiltContext
 class SimpleContextBuilder(ContextBuilder):
-    def __init__(self, max_characters: int = 8000):
-        self.max_characters = max_characters
+    def __init__(self, count_tokens: Callable[[str], int], max_tokens: int = 2000):
+        self.count_tokens = count_tokens
+        self.max_tokens = max_tokens
         
     def _remove_overlap(
         self,
@@ -30,7 +31,10 @@ class SimpleContextBuilder(ContextBuilder):
 
         return current_content
     
-    def _remove_chunk_overlaps(self, chunks: list[Chunk]) -> list[Chunk]:
+    def _remove_chunk_overlaps(
+        self,
+        chunks: list[RetrievedChunk]
+    ) -> list[RetrievedChunk]:
         if len(chunks) <= 1:
             return chunks
 
@@ -39,25 +43,34 @@ class SimpleContextBuilder(ContextBuilder):
         for current in chunks[1:]:
             previous = result[-1]
 
-            is_adjacent = previous.chunk_index + 1 == current.chunk_index
-            
+            is_adjacent = (
+                previous.chunk.notebook_id == current.chunk.notebook_id
+                and previous.chunk.chunk_index + 1 == current.chunk.chunk_index
+            )
+
             if not is_adjacent:
                 result.append(current)
                 continue
 
             cleaned_content = self._remove_overlap(
-                previous.content,
-                current.content,
+                previous.chunk.content,
+                current.chunk.content,
             )
 
+            # Fully covered by the previous chunk, so drop it together with its scores.
             if not cleaned_content:
                 continue
 
-            cleaned_chunk = current.model_copy(
-                update={"content": cleaned_content}
+            # Scores travel with the chunk, so dropping one never shifts the rest.
+            result.append(
+                current.model_copy(
+                    update={
+                        "chunk": current.chunk.model_copy(
+                            update={"content": cleaned_content}
+                        )
+                    }
+                )
             )
-
-            result.append(cleaned_chunk)
 
         return result
 
@@ -65,15 +78,7 @@ class SimpleContextBuilder(ContextBuilder):
         self,
         chunks: list[RetrievedChunk]
     ) -> BuiltContext:
-        cleaned_chunks = self._remove_chunk_overlaps([chunk.chunk for chunk in chunks])
-        chunks=[
-            RetrievedChunk(
-                chunk=cleaned_chunk,
-                similarity_score=retrieved_chunk.similarity_score,
-                rerank_score=retrieved_chunk.rerank_score,
-            )
-            for cleaned_chunk, retrieved_chunk in zip(cleaned_chunks, chunks)
-        ]
+        chunks = self._remove_chunk_overlaps(chunks)
         
         if not chunks:
             return BuiltContext(
@@ -85,7 +90,7 @@ class SimpleContextBuilder(ContextBuilder):
         selected_chunks: list[RetrievedChunk] = []
         seen_contents: set[str] = set()
 
-        current_length = 0
+        current_tokens = 0
 
         for retrieved_chunk in chunks:
 
@@ -110,15 +115,15 @@ class SimpleContextBuilder(ContextBuilder):
             else:
                 part = chunk.content
 
-            additional_length = len(part)
+            additional_tokens = self.count_tokens(part)
 
-            if current_length + additional_length > self.max_characters:
+            if current_tokens + additional_tokens > self.max_tokens:
                 break
 
             context_parts.append(part)
             selected_chunks.append(retrieved_chunk)
 
-            current_length += additional_length
+            current_tokens += additional_tokens
 
         return BuiltContext(
             text="\n\n".join(context_parts),

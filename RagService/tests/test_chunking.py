@@ -2,6 +2,11 @@ from app.chunking.document_chunker import DocumentChunker
 from app.models.document import DocumentRequest
 
 
+def count_words(text: str) -> int:
+    # Deterministic stand-in for the real tokenizer
+    return len(text.split())
+
+
 def test_small_document_aware_sections_are_not_split():
 
     document = DocumentRequest(
@@ -26,8 +31,9 @@ State allows components to remember information.
     )
 
     chunker = DocumentChunker(
-        chunk_size=1000,
-        chunk_overlap=150,
+        count_tokens=count_words,
+        chunk_size=200,
+        chunk_overlap=30,
     )
 
     chunks = chunker.chunk(document)
@@ -55,7 +61,7 @@ State allows components to remember information.
 
 def test_recursive_splitting_applies_overlap_once_and_respects_chunk_size():
     content = " ".join(f"word{index}" for index in range(80))
-    chunker = DocumentChunker(chunk_size=40, chunk_overlap=10)
+    chunker = DocumentChunker(count_tokens=count_words, chunk_size=8, chunk_overlap=2)
     apply_overlap_calls = 0
     original_apply_overlap = chunker._apply_overlap
 
@@ -70,19 +76,19 @@ def test_recursive_splitting_applies_overlap_once_and_respects_chunk_size():
 
     assert apply_overlap_calls == 1
     assert len(chunks) > 1
-    assert all(len(chunk) <= chunker.chunk_size for chunk in chunks)
+    assert all(count_words(chunk) <= chunker.chunk_size for chunk in chunks)
 
 
 def test_overlap_starts_at_a_word_boundary():
-    chunker = DocumentChunker(chunk_size=40, chunk_overlap=10)
+    chunker = DocumentChunker(count_tokens=count_words, chunk_size=8, chunk_overlap=2)
 
-    overlap = chunker._get_overlap("alpha bravo charlie delta", 10)
+    overlap = chunker._get_overlap("alpha bravo charlie delta", 1)
 
     assert overlap == "delta"
 
 
 def test_recursive_split_preserves_delimiters_at_chunk_boundaries():
-    chunker = DocumentChunker(chunk_size=24, chunk_overlap=0)
+    chunker = DocumentChunker(count_tokens=count_words, chunk_size=2, chunk_overlap=0)
 
     chunks = chunker._split_recursive(
         "First sentence. Second sentence.",
