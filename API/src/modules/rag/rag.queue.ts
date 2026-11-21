@@ -17,6 +17,9 @@ export const ragQueue = new Queue<RagJobData>(INGESTION_QUEUE, {
   },
 });
 
+export const ingestJobId = (notebookId: string, version: number) =>
+  `ingest_${notebookId}_v${version}`;
+
 export async function enqueueIngestion(
   notebookId: string,
   version: number,
@@ -25,7 +28,7 @@ export async function enqueueIngestion(
     await ragQueue.add(
       "ingest",
       { type: "ingest", notebookId, version },
-      { jobId: `ingest_${notebookId}_v${version}` },
+      { jobId: ingestJobId(notebookId, version) },
     );
   } catch (error) {
     console.error("Failed to enqueue ingestion (sweeper will retry):", error);
