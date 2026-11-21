@@ -1,10 +1,13 @@
 import { env } from "../../config/env.js";
 
-async function ragRequest<T>(
-  path: string,
-  init: RequestInit,
-): Promise<T | undefined> {
-  const response = await fetch(`${env.RAG_SERVICE_URL}${path}`, {
+// The free-tier RagService sleeps when idle. While it wakes up and loads its models,
+// Render's proxy answers 502/503/504, so those mean "not ready yet", not "failed".
+const COLD_START_STATUSES = new Set([502, 503, 504]);
+const WAKE_TIMEOUT_MS = 150_000;
+const WAKE_POLL_MS = 3_000;
+
+function send(path: string, init: RequestInit): Promise<Response> {
+  return fetch(`${env.RAG_SERVICE_URL}${path}`, {
     ...init,
     headers: {
       "Content-Type": "application/json",
@@ -12,6 +15,42 @@ async function ragRequest<T>(
     },
     signal: AbortSignal.timeout(env.RAG_TIMEOUT_MS),
   });
+}
+
+async function waitUntilAwake(): Promise<void> {
+  const deadline = Date.now() + WAKE_TIMEOUT_MS;
+  while (Date.now() < deadline) {
+    try {
+      const response = await fetch(`${env.RAG_SERVICE_URL}/`, {
+        signal: AbortSignal.timeout(10_000),
+      });
+      if (response.ok) return;
+    } catch {
+      // still starting up
+    }
+    await new Promise((resolve) => setTimeout(resolve, WAKE_POLL_MS));
+  }
+  throw new Error("RagService did not wake up in time");
+}
+
+async function ragRequest<T>(
+  path: string,
+  init: RequestInit,
+): Promise<T | undefined> {
+  let response: Response;
+  try {
+    response = await send(path, init);
+  } catch (error) {
+    // A real timeout means the request itself was slow, so don't resend it.
+    if (error instanceof Error && error.name === "TimeoutError") throw error;
+    await waitUntilAwake(); // connection refused or reset while the service boots
+    response = await send(path, init);
+  }
+
+  if (COLD_START_STATUSES.has(response.status)) {
+    await waitUntilAwake();
+    response = await send(path, init);
+  }
 
   if (!response.ok) {
     const detail = await response.text().catch(() => "");
