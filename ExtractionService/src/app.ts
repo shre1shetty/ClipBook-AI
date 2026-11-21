@@ -7,6 +7,7 @@ import { extractionRouter } from "./routes/extraction.route.js";
 import { errorHandler } from "./middleware/error.middleware.js";
 
 const app = express();
+app.set("trust proxy", 1);
 dotenv.config();
 
 const corsOpts = {
