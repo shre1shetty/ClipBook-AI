@@ -43,7 +43,7 @@ def get_reranker() -> ReRanker:
 
 @lru_cache
 def get_verifier() -> RetrieverVerifier:
-    return SimpleRetrieverVerifier(min_score=7.0)
+    return SimpleRetrieverVerifier(min_score=2.0)
 
 @lru_cache
 def get_retrieval_service() -> RetrievalService:
