@@ -10,6 +10,7 @@ class SimpleRetrieverVerifier(RetrieverVerifier):
         query: str,
         chunks: list[RetrievedChunk]
     ) -> list[RetrievedChunk]:
+        print(f"\n Verifying {len(chunks)} chunks with min_score={self.min_score}...")
         return [
             chunk 
             for chunk in chunks
