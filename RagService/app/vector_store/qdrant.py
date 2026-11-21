@@ -1,5 +1,7 @@
+import os
 from qdrant_client import QdrantClient
 from qdrant_client.models import (
+    PayloadSchemaType,
     Distance,
     PointStruct,
     VectorParams,
@@ -20,20 +22,23 @@ class QdrantVectorRepository(VectorRepository):
     ):
         self.collection_name=collection_name
         
-        # Local in-memory Qdrant for development
-        self.client = QdrantClient(path="./data/qdrant")
+        qdrant_url = os.getenv("QDRANT_URL")
+
+        if qdrant_url:
+            # Qdrant Cloud (or any remote Qdrant): no vectors held in this process
+            self.client = QdrantClient(
+                url=qdrant_url,
+                api_key=os.getenv("QDRANT_API_KEY"),
+                timeout=30,
+            )
+        else:
+            # Local embedded Qdrant for development only
+            self.client = QdrantClient(path="./data/qdrant")
 
         self._create_collection(vector_size)
-    
-    def _create_collection(self,vector_size:int)->None:
-        collections=self.client.get_collections().collections
-        
-        collection_exists=any(
-            collection.name == self.collection_name
-            for collection in collections
-        )
-    
-        if not collection_exists:
+
+    def _create_collection(self, vector_size: int) -> None:
+        if not self.client.collection_exists(self.collection_name):
             self.client.create_collection(
                 collection_name=self.collection_name,
                 vectors_config=VectorParams(
@@ -41,6 +46,14 @@ class QdrantVectorRepository(VectorRepository):
                     distance=Distance.COSINE,
                 ),
             )
+
+        # Filtering by notebook_id on every search/delete needs a payload index
+        # on remote Qdrant. Safe to call repeatedly.
+        self.client.create_payload_index(
+            collection_name=self.collection_name,
+            field_name="notebook_id",
+            field_schema=PayloadSchemaType.KEYWORD,
+        )
 
     def upsert(
         self,
