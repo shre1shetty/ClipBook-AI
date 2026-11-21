@@ -3,7 +3,7 @@ import { env } from "../../config/env.js";
 // The free-tier RagService sleeps when idle. While it wakes up and loads its models,
 // Render's proxy answers 502/503/504, so those mean "not ready yet", not "failed".
 const COLD_START_STATUSES = new Set([502, 503, 504]);
-const WAKE_TIMEOUT_MS = 150_000;
+const WAKE_TIMEOUT_MS = 300_000;
 const WAKE_POLL_MS = 3_000;
 
 function send(path: string, init: RequestInit): Promise<Response> {
@@ -18,19 +18,30 @@ function send(path: string, init: RequestInit): Promise<Response> {
 }
 
 async function waitUntilAwake(): Promise<void> {
-  const deadline = Date.now() + WAKE_TIMEOUT_MS;
+  const startedAt = Date.now();
+  const deadline = startedAt + WAKE_TIMEOUT_MS;
+  let lastStatus = "no response";
+
   while (Date.now() < deadline) {
     try {
       const response = await fetch(`${env.RAG_SERVICE_URL}/`, {
         signal: AbortSignal.timeout(10_000),
       });
-      if (response.ok) return;
-    } catch {
-      // still starting up
+      if (response.ok) {
+        console.log(
+          `RagService awake after ${Math.round((Date.now() - startedAt) / 1000)}s`,
+        );
+        return;
+      }
+      lastStatus = String(response.status);
+    } catch (error) {
+      lastStatus = error instanceof Error ? error.message : "request failed";
     }
     await new Promise((resolve) => setTimeout(resolve, WAKE_POLL_MS));
   }
-  throw new Error("RagService did not wake up in time");
+  throw new Error(
+    `RagService did not wake up in time (last status: ${lastStatus})`,
+  );
 }
 
 async function ragRequest<T>(
